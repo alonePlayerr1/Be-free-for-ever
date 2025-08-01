@@ -1,0 +1,80 @@
+{
+  "log": {
+    "loglevel": "warning"
+  },
+  "inbounds": [
+    {
+      "port": 443,
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "REPLACE_WITH_UUID",
+            "email": "user@example.com"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "dest": "TARGET_DOMAIN:443",
+          "serverNames": [
+            "MASQUERADE_DOMAIN"
+          ],
+          "privateKey": "REPLACE_WITH_PRIVATE_KEY",
+          "shortIds": [
+            "REPLACE_WITH_SHORT_ID"
+          ]
+        }
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "freedom"
+    }
+  ]
+}
+
+/*
+CONFIGURATION INSTRUCTIONS:
+
+1. REPLACE_WITH_UUID: 
+   Generate with: xray uuid
+   Example: 71a4dd30-6d9c-4458-8153-c4ff82f6a982
+
+2. TARGET_DOMAIN: 
+   Real domain that accepts HTTPS connections
+   Recommended: one.one.one.one, cloudflare.com, microsoft.com
+   Must be accessible from your server
+
+3. MASQUERADE_DOMAIN:
+   Domain your traffic pretends to visit
+   Should match TARGET_DOMAIN or be believable alternative
+   Examples: www.microsoft.com, www.google.com, www.cloudflare.com
+
+4. REPLACE_WITH_PRIVATE_KEY:
+   Generate with: xray x25519
+   Keep this secret - it's used for encryption
+
+5. REPLACE_WITH_SHORT_ID:
+   Generate random 2-8 hex characters
+   Example: e70e, a1b2, f3e4d5
+
+DEPLOYMENT NOTES:
+- Save as /usr/local/etc/xray/config.json
+- Restart xray: systemctl restart xray
+- Check status: systemctl status xray
+- View logs: journalctl -u xray -f
+
+FIREWALL SETUP:
+- Allow port 443: ufw allow 443
+- Block unused ports for security
+
+DOMAIN REQUIREMENTS:
+- Point A record to your server IP
+- SSL certificate not required (REALITY handles TLS)
+*/
