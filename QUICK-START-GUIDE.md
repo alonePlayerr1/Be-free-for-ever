@@ -1,284 +1,190 @@
 # Manual Setup Guide
 
-**Prefer AI assistance?** → Use [AI-SETUP-ASSISTANT.md](AI-SETUP-ASSISTANT) instead.
+**Prefer AI assistance?** → Use this guide to avoid long back-and-forth conversation.
 
-This guide is for users who want to set up VLESS+REALITY manually without AI help.
+This guide is for users who want to set up VLESS+REALITY manually with AI help.
 
-## Prerequisites
+## Step 0: Copy and paste into AI chat
 
-- ✅ VPS server (1GB RAM, Ubuntu 20.04+ or Debian 11+)
-- ✅ Domain name pointed to your server IP
-- ✅ Root SSH access to your server
-- ✅ Basic Linux command line knowledge
+### AI Assistant Prompt for VLESS+REALITY Setup
 
-## Step 1: Server Preparation
+**Ready-to-Use Prompt (Copy and Paste to Any AI)**
 
-### Update System
-```bash
-apt update && apt upgrade -y
-apt install -y curl wget unzip
 ```
+Act as an expert Linux system administrator and networking specialist. I need step-by-step guidance to set up a VLESS+REALITY server for bypassing internet censorship. This is for educational and legitimate privacy purposes only.
 
-### Configure Firewall
-```bash
-ufw allow ssh
-ufw allow 443
-ufw --force enable
-```
+IMPORTANT CONTEXT:
+- I am a beginner and need very detailed, exact commands
+- I want to set up VLESS with REALITY protocol on my VPS
+- I have basic Linux command line access
+- Walk me through each step and explain what each command does
+- Ask me to confirm each step before moving to the next
+- If something goes wrong, help me troubleshoot
 
-### Set Timezone (Optional)
-```bash
-timedatectl set-timezone UTC
-```
+MY SETUP:
+- Operating System: [I will tell you: Ubuntu/Debian/CentOS etc.]
+- VPS Provider: [I will tell you: DigitalOcean/Vultr/Linode etc.]
+- Domain: [I will tell you my domain name]
+- Server IP: [I will tell you my server IP]
 
-## Step 2: Install Xray-core
+WHAT I NEED YOU TO DO:
+1. Guide me through server preparation and security
+2. Help me install Xray-core
+3. Generate all necessary keys and IDs for me
+4. Create the server configuration file
+5. Start and test the service
+6. Generate client configuration
+7. Provide troubleshooting steps
 
-### Download and Install
-```bash
-wget -O install.sh https://raw.githubusercontent.com/XTLS/Xray-install/main/install-release.sh
-bash install.sh
-```
+REQUIREMENTS TO INCLUDE:
+- Use VLESS protocol with REALITY security
+- Masquerade as microsoft.com traffic
+- Use port 443
+- Provide both server and client configurations
+- Include all commands I need to copy-paste
+- Generate secure UUIDs and keys for me
+- Test the setup works properly
 
-### Verify Installation
-```bash
-xray version
-```
-Should show Xray version information.
-
-## Step 3: Generate Security Keys
-
-### Generate UUID for Client Authentication
-```bash
-xray uuid
-```
-**Save this UUID** - you'll need it for configuration.
-
-### Generate REALITY Private Key
-```bash
-xray x25519
-```
-**Save both private and public keys** from the output.
-
-### Generate Short ID
-```bash
-openssl rand -hex 8
-```
-**Save this short ID** - use first 8 characters.
-
-## Step 4: Create Server Configuration
-
-### Create Config Directory
-```bash
-mkdir -p /usr/local/etc/xray
-```
-
-### Create Configuration File
-```bash
-nano /usr/local/etc/xray/config.json
-```
-
-**Use this template** and replace the placeholders:
-
+CONFIGURATION TEMPLATE TO CUSTOMIZE:
 ```json
 {
-  "log": {
-    "loglevel": "warning"
-  },
-  "inbounds": [
-    {
-      "port": 443,
-      "protocol": "vless",
-      "settings": {
-        "clients": [
-          {
-            "id": "YOUR_GENERATED_UUID_HERE",
-            "email": "user@example.com"
-          }
-        ],
-        "decryption": "none"
-      },
-      "streamSettings": {
-        "network": "tcp",
-        "security": "reality",
-        "realitySettings": {
-          "show": false,
-          "dest": "one.one.one.one:443",
-          "serverNames": [
-            "www.microsoft.com"
-          ],
-          "privateKey": "YOUR_GENERATED_PRIVATE_KEY_HERE",
-          "shortIds": [
-            "YOUR_GENERATED_SHORT_ID_HERE"
-          ]
-        }
+  "log": {"loglevel": "warning"},
+  "inbounds": [{
+    "port": 443,
+    "protocol": "vless",
+    "settings": {
+      "clients": [{"id": "GENERATED_UUID"}],
+      "decryption": "none"
+    },
+    "streamSettings": {
+      "network": "tcp",
+      "security": "reality",
+      "realitySettings": {
+        "show": false,
+        "dest": "one.one.one.one:443",
+        "serverNames": ["www.microsoft.com"],
+        "privateKey": "GENERATED_PRIVATE_KEY",
+        "shortIds": ["GENERATED_SHORT_ID"]
       }
     }
-  ],
-  "outbounds": [
-    {
-      "protocol": "freedom"
-    }
-  ]
+  }],
+  "outbounds": [{"protocol": "freedom"}]
 }
 ```
 
-**Replace these values:**
-- `YOUR_GENERATED_UUID_HERE` → UUID from Step 3
-- `YOUR_GENERATED_PRIVATE_KEY_HERE` → Private key from Step 3  
-- `YOUR_GENERATED_SHORT_ID_HERE` → Short ID from Step 3
+Start by asking me about my server details (OS, IP, domain) and then guide me through each step one by one. Make sure I understand what each command does before we proceed.
 
-## Step 5: Start Xray Service
+Remember:
+- Give me exact commands to copy-paste
+- Explain potential issues I might encounter
+- Help me verify each step works before continuing
+- Provide the complete client configuration at the end
+- Include instructions for mobile apps (v2rayNG, etc.)
 
-### Enable and Start Service
-```bash
-systemctl enable xray
-systemctl start xray
-```
+Begin by asking me for my server specifications and then start with step 1.
 
-### Check Service Status
-```bash
-systemctl status xray
-```
-Should show "active (running)" in green.
-
-### Check Logs
-```bash
-journalctl -u xray -f
-```
-Should show no errors. Press Ctrl+C to exit.
-
-## Step 6: Test Server Connection
-
-### Test Local Connection
-```bash
-ss -tlnp | grep :443
-```
-Should show Xray listening on port 443.
-
-### Test External Connection
-```bash
-curl -I https://YOUR_DOMAIN.com
-```
-Should show connection attempt (may timeout - that's normal).
-
-## Step 7: Create Client Configuration
-
-Create this configuration for your clients:
-
-```json
-{
-  "inbounds": [
-    {
-      "port": 1080,
-      "protocol": "socks",
-      "settings": {
-        "udp": true
-      }
-    }
-  ],
-  "outbounds": [
-    {
-      "protocol": "vless",
-      "settings": {
-        "vnext": [
-          {
-            "address": "YOUR_DOMAIN.com",
-            "port": 443,
-            "users": [
-              {
-                "id": "YOUR_GENERATED_UUID_HERE",
-                "encryption": "none"
-              }
-            ]
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "tcp",
-        "security": "reality",
-        "realitySettings": {
-          "fingerprint": "chrome",
-          "serverName": "www.microsoft.com",
-          "shortId": "YOUR_GENERATED_SHORT_ID_HERE",
-          "publicKey": "YOUR_GENERATED_PUBLIC_KEY_HERE"
-        }
-      }
-    }
-  ]
-}
-```
-
-**Replace these values:**
-- `YOUR_DOMAIN.com` → Your actual domain name
-- `YOUR_GENERATED_UUID_HERE` → Same UUID from server config
-- `YOUR_GENERATED_SHORT_ID_HERE` → Same short ID from server config
-- `YOUR_GENERATED_PUBLIC_KEY_HERE` → Public key from Step 3
-
-## Step 8: Mobile App Setup
-
-### For Android (v2rayNG):
-1. Install v2rayNG from Google Play
-2. Tap "+" → "Import config from clipboard"
-3. Paste the client configuration above
-4. Tap the config to connect
-
-### For iOS (Shadowrocket):
-1. Install Shadowrocket from App Store
-2. Tap "+" → "Type" → "VLESS"
-3. Fill in the details from your client configuration
-4. Tap save and connect
-
-### For Windows (v2rayN):
-1. Download v2rayN from GitHub releases
-2. Right-click → "Import bulk URL from clipboard"
-3. Paste your client configuration
-4. Double-click to connect
-
-## Troubleshooting
-
-### Service Won't Start
-```bash
-# Check configuration syntax
-xray run -test -config /usr/local/etc/xray/config.json
-
-# Check logs for errors
-journalctl -u xray --no-pager
-```
-
-### Can't Connect from Client
-```bash
-# Check if port 443 is open
-netstat -tlnp | grep :443
-
-# Check firewall
-ufw status
-
-# Test domain resolution
-nslookup YOUR_DOMAIN.com
-```
-
-### Still Having Issues?
-1. Verify all UUIDs and keys match between server and client
-2. Ensure domain is properly pointed to server IP
-3. Check server time is synchronized
-4. Try restarting Xray service: `systemctl restart xray`
-
-## Security Reminders
-
-⚠️ **This setup provides protocol obfuscation, not complete anonymity**
-
-- Traffic metadata is still visible to sophisticated adversaries
-- Use dedicated infrastructure for sensitive activities
-- Regularly update Xray to latest version
-- Monitor server logs for unusual activity
-
-## Next Steps
-
-- Set up monitoring with `htop` or similar tools
-- Configure log rotation to prevent disk filling
-- Consider setting up automated backups of your configuration
-- Test connection speed and optimize if needed
 
 ---
 
-**Setup complete!** Your VLESS+REALITY server should now be running and accessible to clients.
+## Usage Instructions
+
+### How to Use This Prompt:
+
+1. **Copy the entire prompt above** (everything between the triple backticks)
+
+2. **Paste it into any AI assistant:**
+   - ChatGPT
+   - Claude
+   - Gemini/Bard
+   - Bing Chat
+   - Any other AI assistant
+
+3. **The AI will ask you for your server details** - provide:
+   - Your operating system (Ubuntu 20.04, Debian 11, etc.)
+   - Your VPS IP address
+   - Your domain name
+   - VPS provider if relevant
+
+4. **Follow the step-by-step instructions** the AI provides
+
+5. **Don't skip steps** - confirm each one works before proceeding
+
+### What This Prompt Will Do:
+
+✅ **Complete server setup** from scratch  
+✅ **Generate all security keys** automatically  
+✅ **Create working configurations** for both server and client  
+✅ **Test the connection** to ensure it works  
+✅ **Provide mobile app setup** instructions  
+✅ **Include troubleshooting** for common issues  
+✅ **Explain each step** so you understand what's happening  
+
+### Prerequisites You Need:
+
+- **VPS server** (1GB RAM minimum) with root access
+- **Domain name** pointed to your server IP
+- **SSH access** to your server
+- **Basic terminal/command line** access
+
+### Security Notice:
+
+⚠️ **This setup provides protocol obfuscation, not complete anonymity**  
+⚠️ **Use responsibly and comply with local laws**  
+⚠️ **For legitimate privacy and educational purposes only**  
+
+### Mobile App Recommendations:
+
+- **Android**: v2rayNG
+- **iOS**: Shadowrocket, Quantumult X
+- **Windows**: v2rayN
+- **macOS**: V2rayU
+
+---
+
+## Advanced Version (For Technical Users)
+
+If you're more technical and want additional features, use this enhanced prompt🤷‍♂️:
+
+```
+Act as a senior DevOps engineer specializing in network security and circumvention technologies. I need comprehensive guidance for deploying a production-ready VLESS+REALITY server with the following advanced requirements:
+
+ADVANCED FEATURES NEEDED:
+- Automated deployment script
+- Systemd service configuration
+- Log rotation and monitoring
+- Firewall configuration (UFW/iptables)
+- SSL certificate automation
+- Multiple client support
+- Performance optimization
+- Automated updates
+- Health check monitoring
+- Backup configuration
+
+SECURITY HARDENING:
+- SSH key-only authentication
+- Fail2ban configuration
+- Non-standard SSH port
+- Automatic security updates
+- Resource monitoring
+- Connection limits
+
+OPERATIONAL REQUIREMENTS:
+- Docker deployment option
+- Reverse proxy setup (Nginx)
+- Domain masquerading best practices
+- Traffic analysis evasion
+- Multiple protocol fallbacks
+- Geographic distribution strategy
+
+Provide infrastructure-as-code solutions where possible and include monitoring/alerting setup.
+
+MY SETUP:
+- Operating System: [specify]
+- Infrastructure: [Cloud provider/bare metal]
+- Scale: [number of expected users]
+- Compliance requirements: [if any]
+
+Begin with infrastructure assessment and security baseline establishment.
+```
+
+This advanced prompt is for users who want enterprise-grade deployment with monitoring, security hardening, and automation.
